@@ -68,7 +68,7 @@ class Node:
 				yy = v//2
 				self.sx += 2**(len(self.path)-i)*QW//2*xx
 				self.sy += 2**(len(self.path)-i)*QW//2*yy
-			print(self.path, self.sx, self.sy)
+			#print(self.path, self.sx, self.sy)
 		else:
 			self.children = []
 			for i in range(4):
@@ -115,7 +115,7 @@ class Node:
 			return self.children[path[0]].getQuad(path[1:])
 	
 	def pathmath(self, path, delta):
-		print(path, delta)
+		#print(path, delta)
 		if path == []:
 			# failure, out of bounds
 			return None
@@ -148,22 +148,28 @@ class Node:
 		return self.root.getQuad(newpath)
 	
 	def allCoordDeltas(self, target):
+		print("all")
 		for y in range(QH):
 			for x in range(QW):
 				if self.map[y][x] == target:
 					for delta in [(0,1), (0,-1), (1,0), (-1,0)]:
 						yield x, y, delta
 	
-	def borderDeltas(self):
+	def borderDeltas(self, target):
+		print("border")
 		#for caching efficiency
 		for x in range(QW):
-			yield x, 0, (0, -1)
+			if self.map[0][x] == target:
+				yield x, 0, (0, -1)
 		for x in range(QW):
-			yield x, QH-1, (0, 1)
+			if self.map[QH-1][x] == target:
+				yield x, QH-1, (0, 1)
 		for y in range(QH):
-			yield 0, y, (-1, 0)
+			if self.map[y][0] == target:
+				yield 0, y, (-1, 0)
 		for y in range(QH):
-			yield QW-1, y, (1, 0)
+			if self.map[y][QW-1] == target:
+				yield QW-1, y, (1, 0)
 	
 	def getBorderTo(self, a, b):
 		# could improve efficiency with intermediate stages
@@ -174,7 +180,7 @@ class Node:
 			# TODO if only a and 0 in count, only check siblings, outer border
 			border = set()
 			
-			codeltagen = self.allCoordDeltas(a) if b in self.counter else self.borderDeltas()
+			codeltagen = self.allCoordDeltas(a) if b in self.counter else self.borderDeltas(a)
 			
 			for x, y, delta in codeltagen:
 				nx = x + delta[0]
@@ -183,7 +189,6 @@ class Node:
 				# TODO
 				within = False
 				if nx < 0:
-					print(self.path)
 					#	# check sibling, difficult in quadtree, may have to go several parents up, then down again
 					#	self.parent.children[
 					nx = QW-1
@@ -233,7 +238,7 @@ print(root.get(0,0))
 root.set(0,0,1)
 print(root.get(0,0))
 print(root.getFullCount())
-print(root.getBorderTo(0,1))
+print(root.getBorderTo(1,0))
 exit(0)
 
 class World:
