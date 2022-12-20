@@ -14,6 +14,8 @@ with contextlib.redirect_stdout(None):
 
 from datastructures import Node
 
+PIXEL_UNUSED, PIXEL_EMPTY = range(2)
+
 fontcache = {}
 
 def loadfont(fontname, size):
@@ -71,10 +73,10 @@ class World:
 			for x in range(self.w):
 				if self.background[y][x][0] + self.background[y][x][1] - self.background[y][x][2] > 200:
 					# impassable
-					self.ownership.set(x,y,0)
+					self.ownership.set(x,y,PIXEL_UNUSED)
 				else:
 					# occupyable
-					self.ownership.set(x,y,1)
+					self.ownership.set(x,y,PIXEL_EMPTY)
 		
 		print(self.ownership.counter)
 		
@@ -94,10 +96,10 @@ class World:
 					break
 
 	def occupyable(self, v):
-		return v != 0
+		return v != PIXEL_UNUSED
 
 	def empty_occupyable(self, v):
-		return v == 1
+		return v == PIXEL_EMPTY
 
 	def conquerable(self, pid, v):
 		# TODO check adjacency?
@@ -129,7 +131,7 @@ class World:
 		return self.ownership.getBorderTo(pno, condition=self.isPlayer(enemy), count=count, mustcontain=enemy)
 	
 	def getFreeAdjacent(self, pno, count):
-		return self.ownership.getBorderTo(pno, condition=self.empty_occupyable, count=count)
+		return self.ownership.getBorderTo(pno, condition=self.empty_occupyable, count=count, mustcontain=PIXEL_EMPTY)
 	
 	def update(self):
 
@@ -174,7 +176,7 @@ class World:
 			if player.balance > 0 and random() < 0.1:
 				strength = randint(1, player.balance)
 				player.balance -= strength
-				player.armies.append(Army(1, strength))
+				player.armies.append(Army(PIXEL_EMPTY, strength))
 				
 			if player.balance > 0 and random() < 0.1:
 				conquerable_adjacent = world.getConquerableAdjacent(pno, 1)
