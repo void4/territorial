@@ -199,4 +199,4 @@ if __name__ == "__main__":
 	root.set(0,0,1)
 	print(root.get(0,0))
 	print(root.getFullCount())
-	print(root.getBorderTo(1,0))
+	print(root.getBorderTo(1,lambda v: v==0))
