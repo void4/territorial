@@ -37,7 +37,7 @@ class Player:
 	def __init__(self, pno):
 		self.pno = pno
 		self.balance = 100
-		self.color = [randint(100,255) for i in range(3)]	
+		self.color = [randint(100,255) for i in range(3)] + [255]
 		self.interest = 0.08
 		self.armies = []
 		
@@ -53,11 +53,12 @@ def nextPowerOfTwo(v):
 		power *= 2
 	return power
 
-QW = QH = 32
+QW = QH = 64
 
 class World:
 	def __init__(self):
-		self.backgroundimage = Image.open("map.png")
+		self.backgroundimage = Image.open("map.png").convert("RGBA")
+		
 		self.background = np.asarray(self.backgroundimage)
 
 		self.w, self.h = self.backgroundimage.size
@@ -93,6 +94,16 @@ class World:
 				if self.empty_occupyable(self.ownership.get(sx, sy)):
 					self.ownership.set(sx, sy, pno)
 					break
+		
+		self.playercolors = {}
+		
+		self.playercolors[0] = [0,0,0,0]
+		self.playercolors[1] = [0,0,0,0]
+		
+		for pno, player in self.players.items():
+			self.playercolors[pno] = player.color 
+
+		self.color_map = np.array(list(self.playercolors.values()))
 
 	def occupyable(self, v):
 		return v != PIXEL_UNUSED
@@ -193,13 +204,11 @@ class World:
 		bg = np.array(self.background, copy=True)
 		
 		own = self.ownership.getAll()
-		
-		for y in range(self.h):
-			for x in range(self.w):
-				owner = own[y][x]
-				if owner > PIXEL_EMPTY:
-					bg[y][x] = self.players[owner].color
-		
+		own = own[:self.h,:self.w]
+		overlay = self.color_map[own]
+		where = overlay[:,:,3] > 0
+		bg[where] = overlay[where]
+		bg = bg[:,:,:3]
 		return bg
 
 world = World()
@@ -244,6 +253,9 @@ while running:
 	
 	for pno, player in world.players.items():
 		scores[pno] = player.balance
+		coordcounts = world.ownership.getHighestCountCoords(pno)
+		(cx, cy), cc = (coordcounts.most_common(1))[0]
+		text((cx, cy), f"Bot {pno} {cc}")
 	
 	for scoreno, (pno, score) in enumerate(scores.most_common(10)):
 		text((0, scoreno*12), f"{score: >16} {pno}")

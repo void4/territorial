@@ -201,6 +201,16 @@ class Node:
 		else:
 			return sum([child.getFullCount() for child in self.children], Counter())
 
+	def getHighestCountCoords(self, v):
+		if self.level > 1:
+			cnt = Counter()
+			for child in self.children:
+				if v in child.counter:
+					cnt.update(child.getHighestCountCoords(v))
+			return cnt
+		else:
+			return {(child.sx+self.qw//2, child.sy+self.qh//2): child.counter[v] for child in self.children}
+
 if __name__ == "__main__":
 	QW = QH = 32
 	root = Node(QW, QH, 4)
