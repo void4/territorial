@@ -53,7 +53,7 @@ def nextPowerOfTwo(v):
 		power *= 2
 	return power
 
-QW = QH = 64
+QW = QH = 20
 
 class World:
 	def __init__(self):
@@ -135,7 +135,7 @@ class World:
 		return inner
 	
 	def getConquerableAdjacent(self, pno, count):
-		return self.ownership.getBorderTo(pno, condition=self.conquerableFor(pno), count=count)
+		return self.ownership.getBorderTo(pno, condition=self.conquerableFor(pno), count=count, morethan=pno)
 
 	def getAdjacentEnemy(self, pno, enemy, count):
 		return self.ownership.getBorderTo(pno, condition=self.isPlayer(enemy), count=count, mustcontain=enemy)
@@ -154,25 +154,39 @@ class World:
 					self.players[army.target].balance -= attacking
 					enemy_strength = self.ownership.counter[army.target]
 					if enemy_strength > 0:
-						lostTerritory = (attacking/beforeBalance)*enemy_strength
+						if beforeBalance == 0:
+							lostTerritory = enemy_strength
+						else:
+							lostTerritory = (attacking/beforeBalance)*enemy_strength
 						actualLost = 0
 						for x,y in self.getAdjacentEnemy(pno, army.target, lostTerritory):
 							actualLost += 1
 							self.ownership.set(x, y, pno)
+						
+						if actualLost == 0:
+							player.balance += army.strength
+							army.strength = 0
+						else:
+							army.strength = max(0, army.strength - actualLost*2)#not quite right calculation?
 						print(army.target, "lost", actualLost, "to", pno)
 				else:
 					attacking = int(army.strength*0.5)
+					empty_gained = 0
 					for x,y in self.getFreeAdjacent(pno, attacking):
 						self.ownership.set(x, y, pno)
+						empty_gained += 1
+					
+					army.strength = max(0, army.strength - empty_gained*2)
+					
+					# TODO return army if all conquered
 			
-			# XXX
-			player.armies = []
-		
-			player.balance += self.ownership.counter[pno]
+			player.armies = [army for army in player.armies if army.strength > 0]
+			player.payInterest()
+			
 		
 		if self.tick > 0 and self.tick % 10 == 0:
 			for pno, player in self.players.items():
-				player.payInterest()
+				player.balance += self.ownership.counter[pno]
 		
 		
 		defeated = []

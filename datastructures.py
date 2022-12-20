@@ -12,6 +12,10 @@ class Node:
 		self.parent = parent
 		self.offset = 0
 		self.level = level
+		
+		if self.parent is None:
+			self.quadmap = [[None for x in range(2**level)] for y in range(2**level)]
+		
 		if root is None:
 			self.root = self
 		else:
@@ -21,16 +25,24 @@ class Node:
 			self.map = [[0 for x in range(self.qw)] for y in range(self.qh)]
 			self.sx = 0
 			self.sy = 0
+			
 			for i, v in enumerate(self.path):
 				xx = v%2
 				yy = v//2
 				self.sx += 2**(len(self.path)-i)*self.qw//2*xx
 				self.sy += 2**(len(self.path)-i)*self.qw//2*yy
+			
+			self.qx = self.sx//self.qw
+			self.qy = self.sy//self.qh
+			self.root.quadmap[self.qy][self.qx] = self#old self?
 			#print(self.path, self.sx, self.sy)
 		else:
 			self.children = []
 			for i in range(4):
 				self.children.append(Node(qw, qh, level-1, self, self.path+[i], self.root))
+		
+		
+		
 	
 	def getAll(self):
 		if self.level > 0:
@@ -72,46 +84,11 @@ class Node:
 			self.counter[v] += 1			
 			return old
 	
-	def getQuad(self, path):
-		if path is None:
+	def getRelativeQuad(self, dxy):
+		try:
+			return self.root.quadmap[self.qy+dxy[1]][self.qx+dxy[0]]
+		except IndexError:
 			return None
-		elif len(path) == 0:
-			return self
-		else:
-			return self.children[path[0]].getQuad(path[1:])
-	
-	def pathmath(self, path, delta):
-		#print(path, delta)
-		if path == []:
-			# failure, out of bounds
-			return None
-		# only support single 0/1-deltas for now
-		dx = delta[0]
-		dy = delta[1]
-		last = path[-1]
-		lx = last%2
-		ly = last//2
-		nx = lx+dx
-		ny = ly+dy
-		if nx == -1:
-			subpath = self.pathmath(path[:-1], (-1,0))
-			return subpath + [1+2*ny] if subpath else None
-		elif nx == 2:
-			subpath = self.pathmath(path[:-1], (1,0))
-			return subpath + [0+2*ny] if subpath else None
-		elif ny == -1:
-			subpath = self.pathmath(path[:-1], (0,-1))
-			return subpath + [nx+2*1] if subpath else None
-		elif ny == 2:
-			subpath = self.pathmath(path[:-1], (0,1))
-			return subpath + [nx+2*0] if subpath else None
-		else:
-			return path[:-1] + [nx+ny*2]
-			
-	
-	def getRelativeQuad(self, path, delta):
-		newpath = self.pathmath(path, delta)
-		return self.root.getQuad(newpath)
 	
 	def allCoordDeltas(self, target):
 		for y in range(self.qh):
@@ -135,7 +112,7 @@ class Node:
 			if self.map[y][self.qw-1] == target:
 				yield self.qw-1, y, (1, 0)
 	
-	def getBorderTo(self, a, condition, count=None, border=None, mustcontain=None):
+	def getBorderTo(self, a, condition, count=None, border=None, mustcontain=None, morethan=None):
 		if border is None:
 			border = set()
 		# could improve efficiency with intermediate stages
@@ -145,7 +122,10 @@ class Node:
 			
 			# TODO if only a and 0 in count, only check siblings, outer border
 			
-			codeltagen = self.allCoordDeltas(a) if mustcontain is None or mustcontain in self.counter else self.borderDeltas(a)
+			if mustcontain is None or mustcontain in self.counter and (morethan is None or len(set(self.counter.keys()).difference([morethan, 0])) > 0):
+				codeltagen = self.allCoordDeltas(a) 
+			else:
+				codeltagen = self.borderDeltas(a)
 			
 			for x, y, delta in codeltagen:
 			
@@ -179,7 +159,7 @@ class Node:
 				
 				if not within:
 					# TODO: cache this!
-					sibling = self.root.getRelativeQuad(self.path, delta)
+					sibling = self.getRelativeQuad(delta)
 					if sibling is not None:
 						if condition(sibling.map[ny][nx]):
 							border.add((sibling.sx+nx, sibling.sy+ny))
