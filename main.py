@@ -157,14 +157,14 @@ class World:
 					
 						if beforeBalance <= player.balance:
 							if beforeBalance == 0:
-								lostTerritory = enemy_strength
+								lostTerritory = 4*int(enemy_strength**0.5)
 							else:
-								lostTerritory = (attacking/beforeBalance)*enemy_strength
+								lostTerritory = 4*int(((attacking/beforeBalance)*enemy_strength)**0.5)
 							actualLost = 0
 							for x,y in self.getAdjacentEnemy(pno, army.target, lostTerritory):
 								actualLost += 1
 								self.ownership.set(x, y, pno)
-							
+							print("lost:", lostTerritory, "actual:", actualLost)
 							self.players[army.target].balance = max(0, self.players[army.target].balance - actualLost)
 							
 							if actualLost == 0:

@@ -112,20 +112,37 @@ class Node:
 					for delta in [(0,1), (0,-1), (1,0), (-1,0)]:
 						yield x, y, delta
 	
-	def borderDeltas(self, target):
+	def borderDeltas(self, target, morethan=None):
 		#for caching efficiency
-		for x in range(self.qw):
-			if self.map[0][x] == target:
-				yield x, 0, (0, -1)
-		for x in range(self.qw):
-			if self.map[self.qh-1][x] == target:
-				yield x, self.qh-1, (0, 1)
-		for y in range(self.qh):
-			if self.map[y][0] == target:
-				yield 0, y, (-1, 0)
-		for y in range(self.qh):
-			if self.map[y][self.qw-1] == target:
-				yield self.qw-1, y, (1, 0)
+		
+		UP, DOWN, LEFT, RIGHT = [(0, -1), (0, 1), (-1, 0), (1, 0)]
+		
+		sibling = self.getRelativeQuad(UP)
+		if sibling is not None and sibling.containsMoreThan(morethan):
+			for x in range(self.qw):
+				if self.map[0][x] == target:
+					yield x, 0, UP
+
+		sibling = self.getRelativeQuad(DOWN)
+		if sibling is not None and sibling.containsMoreThan(morethan):	
+			for x in range(self.qw):
+				if self.map[self.qh-1][x] == target:
+					yield x, self.qh-1, DOWN
+		
+		sibling = self.getRelativeQuad(LEFT)
+		if sibling is not None and sibling.containsMoreThan(morethan):
+			for y in range(self.qh):
+				if self.map[y][0] == target:
+					yield 0, y, LEFT
+					
+		sibling = self.getRelativeQuad(RIGHT)
+		if sibling is not None and sibling.containsMoreThan(morethan):
+			for y in range(self.qh):
+				if self.map[y][self.qw-1] == target:
+					yield self.qw-1, y, RIGHT
+	
+	def containsMoreThan(self, morethan):
+		return morethan is None or len(set(self.counter.keys()).difference([morethan, 0])) > 0
 	
 	def getBorderTo(self, a, condition, count=None, border=None, mustcontain=None, morethan=None):
 		if border is None:
@@ -137,10 +154,10 @@ class Node:
 			
 			# TODO if only a and 0 in count, only check siblings, outer border
 			
-			if (mustcontain is None or mustcontain in self.counter) and (morethan is None or len(set(self.counter.keys()).difference([morethan, 0])) > 0):
+			if (mustcontain is None or mustcontain in self.counter) and self.containsMoreThan(morethan):
 				codeltagen = self.allCoordDeltas(a) 
 			else:
-				codeltagen = self.borderDeltas(a)
+				codeltagen = self.borderDeltas(a, morethan)
 			
 			for x, y, delta in codeltagen:
 			
@@ -172,9 +189,14 @@ class Node:
 					if condition(self.map[ny][nx]):
 						border[(self.sx+nx, self.sy+ny)] = True
 				
+				quadcache = {}
 				if not within:
 					# TODO: cache this!
-					sibling = self.getRelativeQuad(delta)
+					if delta not in quadcache:
+						sibling = self.getRelativeQuad(delta)
+						quadcache[delta] = sibling
+					else:
+						sibling = quadcache[delta]
 					if sibling is not None:
 						if condition(sibling.map[ny][nx]):
 							border[(sibling.sx+nx, sibling.sy+ny)] = True
