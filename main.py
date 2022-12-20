@@ -1,6 +1,5 @@
 #Wanna find out what the best growth strategy is in a usual case
 from collections import defaultdict, Counter
-from time import sleep
 from random import random, randint
 from math import log, ceil
 from copy import deepcopy
@@ -191,7 +190,7 @@ class World:
 		self.tick += 1
 	
 	def getMap(self):
-		bg = deepcopy(self.background)
+		bg = np.array(self.background, copy=True)
 		
 		own = self.ownership.getAll()
 		
@@ -199,7 +198,7 @@ class World:
 			for x in range(self.w):
 				owner = own[y][x]
 				if owner > PIXEL_EMPTY:
-					bg[y][x] = deepcopy(self.players[owner].color)
+					bg[y][x] = self.players[owner].color
 		
 		return bg
 
@@ -210,6 +209,7 @@ attacks = defaultdict(dict)
 pygame.init()
 pygame.display.set_caption("territorial.io")
 
+clock = pygame.time.Clock()
 
 screen = pygame.display.set_mode((world.w, world.h))
 
@@ -251,7 +251,7 @@ while running:
 	print(pygame.key.get_pressed()[pygame.K_UP])
 
 	pygame.display.flip()
-	sleep(0.04)
+	clock.tick(60)
 
 
 
