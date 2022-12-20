@@ -86,7 +86,7 @@ class World:
 
 		self.players = {}
 		
-		for pno in range(2, NUMPLAYERS+2):
+		for pno in range(PIXEL_EMPTY+1, NUMPLAYERS+PIXEL_EMPTY+1):
 			self.players[pno] = Player(pno)
 			
 			while True:
@@ -192,10 +192,13 @@ class World:
 	
 	def getMap(self):
 		bg = deepcopy(self.background)
+		
+		own = self.ownership.getAll()
+		
 		for y in range(self.h):
 			for x in range(self.w):
-				owner = self.ownership.get(x, y)
-				if owner > 1:
+				owner = own[y][x]
+				if owner > PIXEL_EMPTY:
 					bg[y][x] = deepcopy(self.players[owner].color)
 		
 		return bg

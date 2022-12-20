@@ -1,4 +1,5 @@
 from collections import Counter
+import numpy as np
 
 class Node:
 	def __init__(self, qw, qh, level, parent=None, path=None, root=None):
@@ -30,6 +31,14 @@ class Node:
 			self.children = []
 			for i in range(4):
 				self.children.append(Node(qw, qh, level-1, self, self.path+[i], self.root))
+	
+	def getAll(self):
+		if self.level > 0:
+			a = np.concatenate([self.children[0].getAll(), self.children[1].getAll()], axis=1)
+			b = np.concatenate([self.children[2].getAll(), self.children[3].getAll()], axis=1)
+			return np.concatenate([a, b], axis=0)
+		else:
+			return self.map
 	
 	def index(self, x, y):
 		scale = 2**self.level
