@@ -122,7 +122,7 @@ class Node:
 			
 			# TODO if only a and 0 in count, only check siblings, outer border
 			
-			if mustcontain is None or mustcontain in self.counter and (morethan is None or len(set(self.counter.keys()).difference([morethan, 0])) > 0):
+			if (mustcontain is None or mustcontain in self.counter) and (morethan is None or len(set(self.counter.keys()).difference([morethan, 0])) > 0):
 				codeltagen = self.allCoordDeltas(a) 
 			else:
 				codeltagen = self.borderDeltas(a)

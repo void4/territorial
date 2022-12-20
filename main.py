@@ -154,21 +154,28 @@ class World:
 					self.players[army.target].balance -= attacking
 					enemy_strength = self.ownership.counter[army.target]
 					if enemy_strength > 0:
-						if beforeBalance == 0:
-							lostTerritory = enemy_strength
+					
+						if beforeBalance <= player.balance:
+							if beforeBalance == 0:
+								lostTerritory = enemy_strength
+							else:
+								lostTerritory = (attacking/beforeBalance)*enemy_strength
+							actualLost = 0
+							for x,y in self.getAdjacentEnemy(pno, army.target, lostTerritory):
+								actualLost += 1
+								self.ownership.set(x, y, pno)
+							
+							self.players[army.target].balance = max(0, self.players[army.target].balance - actualLost)
+							
+							if actualLost == 0:
+								player.balance += army.strength
+								army.strength = 0
+							else:
+								army.strength = max(0, army.strength - actualLost*2)#not quite right calculation?
+							print(army.target, "lost", actualLost, "to", pno)
 						else:
-							lostTerritory = (attacking/beforeBalance)*enemy_strength
-						actualLost = 0
-						for x,y in self.getAdjacentEnemy(pno, army.target, lostTerritory):
-							actualLost += 1
-							self.ownership.set(x, y, pno)
-						
-						if actualLost == 0:
-							player.balance += army.strength
+							self.players[army.target].balance = max(0, self.players[army.target].balance - army.strength)
 							army.strength = 0
-						else:
-							army.strength = max(0, army.strength - actualLost*2)#not quite right calculation?
-						print(army.target, "lost", actualLost, "to", pno)
 				else:
 					attacking = int(army.strength*0.5)
 					empty_gained = 0
@@ -197,16 +204,16 @@ class World:
 			if player.balance <= 0:
 				defeated.append(pno)
 
-			if player.balance > 0 and random() < 0.1:
-				strength = randint(1, player.balance)
+			if player.balance >= 2 and random() < 0.1:
+				strength = randint(1, player.balance-1)
 				player.balance -= strength
 				player.armies.append(Army(PIXEL_EMPTY, strength))
 				
-			if player.balance > 0 and random() < 0.1:
+			if player.balance >= 2 and random() < 0.1:
 				conquerable_adjacent = world.getConquerableAdjacent(pno, 1)
 				if len(conquerable_adjacent) > 0:
 					cx, cy = list(conquerable_adjacent)[0]
-					strength = randint(1, player.balance)
+					strength = randint(1, player.balance-1)
 					player.balance -= strength
 					#print("attacking", self.ownership.get(cx, cy))
 					player.armies.append(Army(self.ownership.get(cx, cy), strength))
@@ -269,7 +276,7 @@ while running:
 		scores[pno] = player.balance
 		coordcounts = world.ownership.getHighestCountCoords(pno)
 		(cx, cy), cc = (coordcounts.most_common(1))[0]
-		text((cx, cy), f"Bot {pno} {cc}")
+		text((cx, cy), f"Bot {pno} {player.balance}")#{cc}")
 	
 	for scoreno, (pno, score) in enumerate(scores.most_common(10)):
 		text((0, scoreno*12), f"{score: >16} {pno}")
