@@ -114,7 +114,7 @@ class Node:
 	
 	def getBorderTo(self, a, condition, count=None, border=None, mustcontain=None, morethan=None):
 		if border is None:
-			border = set()
+			border = {}
 		# could improve efficiency with intermediate stages
 		if self.level == 0:
 			if a not in self.counter:
@@ -155,14 +155,14 @@ class Node:
 					within = True
 					# within this quad
 					if condition(self.map[ny][nx]):
-						border.add((self.sx+nx, self.sy+ny))
+						border[(self.sx+nx, self.sy+ny)] = True
 				
 				if not within:
 					# TODO: cache this!
 					sibling = self.getRelativeQuad(delta)
 					if sibling is not None:
 						if condition(sibling.map[ny][nx]):
-							border.add((sibling.sx+nx, sibling.sy+ny))
+							border[(sibling.sx+nx, sibling.sy+ny)] = True
 			return border
 		else:
 			if a in self.counter:
