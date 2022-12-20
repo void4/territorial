@@ -53,7 +53,7 @@ def nextPowerOfTwo(v):
 		power *= 2
 	return power
 
-QW = QH = 20
+QW = QH = 8
 
 class World:
 	def __init__(self):
@@ -224,7 +224,7 @@ class World:
 	def getMap(self):
 		bg = np.array(self.background, copy=True)
 		
-		own = self.ownership.getAll()
+		own = self.ownership.getAllRoot()
 		own = own[:self.h,:self.w]
 		overlay = self.color_map[own]
 		where = overlay[:,:,3] > 0
@@ -244,6 +244,8 @@ clock = pygame.time.Clock()
 screen = pygame.display.set_mode((world.w, world.h))
 
 color = (0, 0, 0)
+
+delta = 1
 
 i = 0
 running = True
@@ -279,12 +281,13 @@ while running:
 		text((cx, cy), f"Bot {pno} {player.balance}")#{cc}")
 	
 	for scoreno, (pno, score) in enumerate(scores.most_common(10)):
-		text((0, scoreno*12), f"{score: >16} {pno}")
+		text((0, 13+scoreno*12), f"{score: >16} {pno}")
 
 	print(pygame.key.get_pressed()[pygame.K_UP])
-
+	text((0,0), f"FPS: {round(1/(delta/1000))}")
+	
 	pygame.display.flip()
-	clock.tick(60)
+	delta = clock.tick(60)
 
 
 

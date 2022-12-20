@@ -52,6 +52,21 @@ class Node:
 		else:
 			return self.map
 	
+	def getAllRoot(self):
+		w = 2**self.level*self.qw
+		h = 2**self.level*self.qh
+		
+		qww = qhh = 2**self.level
+		
+		total = np.zeros((h,w), dtype=np.int8)#XXX if more than 256 players, have to use int16!
+		
+		for y in range(qhh):
+			for x in range(qww):
+				quad = self.quadmap[y][x]
+				total[quad.sy:quad.sy+self.qh, quad.sx:quad.sx+self.qw] = quad.map
+		
+		return total
+	
 	def index(self, x, y):
 		scale = 2**self.level
 		xres = scale*self.qw // 2
