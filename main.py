@@ -11,7 +11,8 @@ import contextlib
 with contextlib.redirect_stdout(None):
     import pygame
 
-from datastructures import Node
+#from datastructures import Node
+from datastructures2 import Node
 
 PIXEL_UNUSED, PIXEL_EMPTY = range(2)
 
@@ -67,7 +68,8 @@ class World:
 		pot = ceil(log(max(nextPowerOfTwo(self.w/QW), nextPowerOfTwo(self.h/QH)), 2))
 		print("pot", pot)
 		
-		self.ownership = Node(QW, QH, pot)
+		#self.ownership = Node(QW, QH, pot)
+		self.ownership = Node(self.w, self.h)
 		
 		for y in range(self.h):
 			for x in range(self.w):
@@ -135,13 +137,13 @@ class World:
 		return inner
 	
 	def getConquerableAdjacent(self, pno, count):
-		return self.ownership.getBorderTo(pno, condition=self.conquerableFor(pno), count=count, morethan=pno)
+		return self.ownership.getBorderTo(pno, condition=self.conquerableFor(pno), count=count)#, morethan=pno)
 
 	def getAdjacentEnemy(self, pno, enemy, count):
-		return self.ownership.getBorderTo(pno, condition=self.isPlayer(enemy), count=count, mustcontain=enemy)
+		return self.ownership.getBorderTo(pno, condition=self.isPlayer(enemy), count=count)#, mustcontain=enemy)
 	
 	def getFreeAdjacent(self, pno, count):
-		return self.ownership.getBorderTo(pno, condition=self.empty_occupyable, count=count, mustcontain=PIXEL_EMPTY)
+		return self.ownership.getBorderTo(pno, condition=self.empty_occupyable, count=count)#, mustcontain=PIXEL_EMPTY)
 	
 	def update(self):
 
@@ -189,7 +191,6 @@ class World:
 			
 			player.armies = [army for army in player.armies if army.strength > 0]
 			player.payInterest()
-			
 		
 		if self.tick > 0 and self.tick % 10 == 0:
 			for pno, player in self.players.items():
@@ -204,19 +205,22 @@ class World:
 			if player.balance <= 0:
 				defeated.append(pno)
 
-			if player.balance >= 2 and random() < 0.1:
-				strength = randint(1, player.balance-1)
-				player.balance -= strength
-				player.armies.append(Army(PIXEL_EMPTY, strength))
-				
-			if player.balance >= 2 and random() < 0.1:
-				conquerable_adjacent = world.getConquerableAdjacent(pno, 1)
-				if len(conquerable_adjacent) > 0:
-					cx, cy = list(conquerable_adjacent)[0]
+			# Limit number of armies by bots probabilistically
+			if random() < 0.5/(1+len(player.armies))**2:
+
+				if player.balance >= 2 and random() < 0.1:
 					strength = randint(1, player.balance-1)
 					player.balance -= strength
-					#print("attacking", self.ownership.get(cx, cy))
-					player.armies.append(Army(self.ownership.get(cx, cy), strength))
+					player.armies.append(Army(PIXEL_EMPTY, strength))
+					
+				if player.balance >= 2 and random() < 0.1:
+					conquerable_adjacent = world.getConquerableAdjacent(pno, 1)
+					if len(conquerable_adjacent) > 0:
+						cx, cy = list(conquerable_adjacent)[0]
+						strength = randint(1, player.balance-1)
+						player.balance -= strength
+						#print("attacking", self.ownership.get(cx, cy))
+						player.armies.append(Army(self.ownership.get(cx, cy), strength))
 				
 					
 		self.tick += 1
@@ -225,7 +229,7 @@ class World:
 		bg = np.array(self.background, copy=True)
 		
 		own = self.ownership.getAllRoot()
-		own = own[:self.h,:self.w]
+		#own = own[:self.h,:self.w]
 		overlay = self.color_map[own]
 		where = overlay[:,:,3] > 0
 		bg[where] = overlay[where]
@@ -276,15 +280,16 @@ while running:
 	
 	for pno, player in world.players.items():
 		scores[pno] = player.balance
-		coordcounts = world.ownership.getHighestCountCoords(pno)
-		(cx, cy), cc = (coordcounts.most_common(1))[0]
-		text((cx, cy), f"Bot {pno} {player.balance}")#{cc}")
+		(cx, cy), cc = world.ownership.getHighestCountCoords(pno)
+		if cc:
+			text((cx, cy), f"Bot {pno} {player.balance}")#{cc}")
 	
 	for scoreno, (pno, score) in enumerate(scores.most_common(10)):
 		text((0, 13+scoreno*12), f"{score: >16} {pno}")
 
 	print(pygame.key.get_pressed()[pygame.K_UP])
-	text((0,0), f"FPS: {round(1/(delta/1000))}")
+	numarmies = sum([len(player.armies) for player in world.players.values()])
+	text((0,0), f"FPS: {round(1/(delta/1000))} Players: {len(world.players)} Armies: {numarmies}")
 	
 	pygame.display.flip()
 	delta = clock.tick(60)

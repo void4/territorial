@@ -224,7 +224,11 @@ class Node:
 			for child in self.children:
 				if v in child.counter:
 					cnt.update(child.getHighestCountCoords(v))
-			return cnt
+			
+			if self.parent is None:
+				return cnt.most_common(1)[0]
+			else:
+				return cnt
 		else:
 			return {(child.sx+self.qw//2, child.sy+self.qh//2): child.counter[v] for child in self.children}
 
