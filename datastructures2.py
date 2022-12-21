@@ -30,6 +30,21 @@ class Node:
 	def set(self, x, y, v):
 		old = self.map[y][x]
 		self.groups[(x,y)] = v
+
+		check = False
+		for delta in [(-1,0), (1,0), (0,-1), (0,1)]:
+			nx = x + delta[0]
+			ny = y + delta[1]
+
+			if nx < 0 or ny < 0 or nx >= self.w or ny >= self.h:
+				continue
+
+			if self.map[ny][nx] not in [0, v]:
+				check = True
+				break
+
+
+		self.groups.inverse[v][(x,y)] = check
 		self.map[y][x] = v
 
 	@property
@@ -38,10 +53,12 @@ class Node:
 
 	def getBorderTo(self, a, condition, count):
 		result = []
-		for cxy in self.groups.inverse[a]:
+		for (x, y), check in self.groups.inverse[a].items():
+			if not check:
+				continue
 			for delta in [(-1,0), (1,0), (0,-1), (0,1)]:
-				nx = cxy[0] + delta[0]
-				ny = cxy[1] + delta[1]
+				nx = x + delta[0]
+				ny = y + delta[1]
 
 				if nx < 0 or ny < 0 or nx >= self.w or ny >= self.h:
 					continue
