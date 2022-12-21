@@ -30,22 +30,37 @@ class Node:
 	def set(self, x, y, v):
 		old = self.map[y][x]
 		self.groups[(x,y)] = v
+		# Have to do this first so neighbor checks later work
+		self.map[y][x] = v
+		# Also have to check neighbors because their perspective might change
 
-		check = False
-		for delta in [(-1,0), (1,0), (0,-1), (0,1)]:
-			nx = x + delta[0]
-			ny = y + delta[1]
+		for ndelta in [(0,0), (-1,0), (1,0), (0,-1), (0,1)]:
+			check = False
+			goodcoord = False
+			nx = x + ndelta[0]
+			ny = y + ndelta[1]
 
 			if nx < 0 or ny < 0 or nx >= self.w or ny >= self.h:
 				continue
 
-			if self.map[ny][nx] not in [0, v]:
-				check = True
-				break
+			nv = self.map[ny][nx]
+
+			# Have to check all again because otherwise can't set check back to true for neighbors
+			for delta in [(-1,0), (1,0), (0,-1), (0,1)]:
+
+				cx = nx + delta[0]
+				cy = ny + delta[1]
+
+				if cx < 0 or cy < 0 or cx >= self.w or cy >= self.h:
+					continue
+
+				if self.map[cy][cx] not in [0, nv]:
+					check = True
+					break
+
+			self.groups.inverse[nv][(nx,ny)] = check
 
 
-		self.groups.inverse[v][(x,y)] = check
-		self.map[y][x] = v
 
 	@property
 	def counter(self):
@@ -73,7 +88,23 @@ class Node:
 		return set(result)
 
 	def getAllRoot(self):
-		return self.map
+		#return self.map
+		import numpy as np
+		cmap = np.array(self.map, copy=True)
+
+		nocheck = 0
+		for v, cd in self.groups.inverse.items():
+			for coord, check in cd.items():
+				if check:
+					cmap[coord[1]][coord[0]] = 2
+				else:
+					if v in [0,1]:
+						cmap[coord[1]][coord[0]] = v
+					else:
+						nocheck += 1
+						cmap[coord[1]][coord[0]] = 3
+		print("nocheck", nocheck)
+		return cmap
 
 	def getFullCount(self):
 		return {key:len(value) for key, value in self.groups.inverse.items()}
