@@ -85,8 +85,6 @@ class World:
 					# occupyable
 					self.ownership.set(x,y,PIXEL_EMPTY)
 
-		print(self.ownership.counter)
-
 		self.tick = 0
 
 		NUMPLAYERS = 100
@@ -158,7 +156,7 @@ class World:
 				if army.target != 1:
 					attacking = int(army.strength*0.5)
 					beforeBalance = self.players[army.target].balance
-					self.players[army.target].balance -= attacking
+					self.players[army.target].balance = max(0, self.players[army.target].balance-attacking)
 					enemy_strength = self.ownership.counter[army.target]
 					if enemy_strength > 0:
 
@@ -203,13 +201,14 @@ class World:
 
 		if self.tick > 0 and self.tick % 10 == 0:
 			for pno, player in self.players.items():
-				player.balance += self.ownership.counter[pno]
+				player.balance += count[pno]
 
 
 		defeated = []
 
 		for pno, player in self.players.items():
-			player.balance = min(150 * self.ownership.counter[pno], player.balance)
+			player.playermax = 150 * count[pno]
+			player.balance = min(player.playermax, player.balance)
 
 			if player.balance <= 0:
 				defeated.append(pno)
@@ -217,12 +216,12 @@ class World:
 			# Limit number of armies by bots probabilistically
 			if random() < 1/(1+len(player.armies))**2:
 
-				if player.balance >= 2 and random() < 0.1:
+				if player.balance >= 2 and random() < 0.03:
 					strength = randint(1, player.balance-1)
 					player.balance -= strength
 					player.armies.append(Army(PIXEL_EMPTY, strength))
 
-				if player.balance >= 2 and random() < 0.1:
+				if player.balance >= 2 and random() < 0.03 or player.playermax == player.balance:
 					conquerable_adjacent = world.getConquerableAdjacent(pno, 1)
 					if len(conquerable_adjacent) > 0:
 						cx, cy = list(conquerable_adjacent)[0]
