@@ -1,5 +1,7 @@
 from collections import Counter, defaultdict
 
+import numpy as np
+
 class bidict(dict):
 	def __init__(self, *args, **kwargs):
 		super(bidict, self).__init__(*args, **kwargs)
@@ -88,8 +90,10 @@ class Node:
 		return set(result)
 
 	def getAllRoot(self):
-		#return self.map
-		import numpy as np
+		return self.map
+
+	def getAllRootChecks(self):
+
 		cmap = np.array(self.map, copy=True)
 
 		nocheck = 0
@@ -103,7 +107,6 @@ class Node:
 					else:
 						nocheck += 1
 						cmap[coord[1]][coord[0]] = 3
-		print("nocheck", nocheck)
 		return cmap
 
 	def getFullCount(self):

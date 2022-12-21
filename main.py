@@ -194,7 +194,11 @@ class World:
 
 					# TODO return army if all conquered
 
-			player.armies = [army for army in player.armies if army.strength > 0]
+		count = self.ownership.counter
+
+		for pno, player in self.players.items():
+
+			player.armies = [army for army in player.armies if army.strength > 0 and count[pno] > 0]
 			player.payInterest()
 
 		if self.tick > 0 and self.tick % 10 == 0:
@@ -211,7 +215,7 @@ class World:
 				defeated.append(pno)
 
 			# Limit number of armies by bots probabilistically
-			if random() < 0.5/(1+len(player.armies))**2:
+			if random() < 1/(1+len(player.armies))**2:
 
 				if player.balance >= 2 and random() < 0.1:
 					strength = randint(1, player.balance-1)
@@ -233,7 +237,7 @@ class World:
 	def getMap(self):
 		bg = np.array(self.background, copy=True)
 
-		own = self.ownership.getAllRoot()
+		own = self.ownership.getAllRoot()#Checks()
 		#own = own[:self.h,:self.w]
 		overlay = self.color_map[own]
 		where = overlay[:,:,3] > 0
@@ -287,12 +291,13 @@ while running:
 		scores[pno] = player.balance
 		(cx, cy), cc = world.ownership.getHighestCountCoords(pno)
 		if cc:
-			text((cx, cy), f"Bot {pno} {player.balance}")#{cc}")
+			text((cx, cy), f"Bot {pno} {player.balance:,}")#{cc}")
 
 	for scoreno, (pno, score) in enumerate(scores.most_common(10)):
-		text((0, 13+scoreno*12), f"{score: >16} {pno}")
+		text((0, 13+scoreno*12), f"{score: >16,} {pno}")
 
-	print(pygame.key.get_pressed()[pygame.K_UP])
+	#print(pygame.key.get_pressed()[pygame.K_UP])
+
 	numarmies = sum([len(player.armies) for player in world.players.values()])
 	text((0,0), f"FPS: {round(1/(delta/1000))} Players: {len(world.players)} Armies: {numarmies}")
 
