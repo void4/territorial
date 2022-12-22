@@ -291,7 +291,7 @@ while running:
 		scores[pno] = player.balance
 		(cx, cy), cc = world.ownership.getHighestCountCoords(pno)
 		if cc:
-			text((cx, cy), f"Bot {pno} {player.balance:,}")#{cc}")
+			text((cx, cy), f"Bot {pno} {player.balance:,}", size=max(6,min(26,int(log(1+cc*10)))))#{cc}")
 
 	for scoreno, (pno, score) in enumerate(scores.most_common(10)):
 		text((0, 13+scoreno*12), f"{score: >16,} {pno}")
