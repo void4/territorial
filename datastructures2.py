@@ -58,8 +58,35 @@ class Node:
 	def counter(self):
 		return self.getFullCount()
 
+	def getBorderTo3(self, a, b, count):
+		ca = sorted(self.v2k2c[a][True].keys())
+		cb = sorted(self.v2k2c[b][True].keys())
+
+		print(ca)
+
+	def getBorderTo2(self, a, b, count):
+		result = []
+		#print(len(self.v2k2c[a][True]))
+		for (x, y) in self.v2k2c[a][True].keys():
+			for delta in [(-1,0), (1,0), (0,-1), (0,1)]:
+				nx = x + delta[0]
+				ny = y + delta[1]
+
+				#if nx < 0 or ny < 0 or nx >= self.w or ny >= self.h:
+				#	continue
+
+				if (nx, ny) in self.v2k2c[b][True]:
+					result.append((nx, ny))
+					if count is not None and len(result) == count:
+						break
+			else:
+				continue
+			break
+		return set(result)
+
 	def getBorderTo(self, a, condition, count):
 		result = []
+		#print(len(self.v2k2c[a][True]))
 		for (x, y) in self.v2k2c[a][True].keys():
 			for delta in [(-1,0), (1,0), (0,-1), (0,1)]:
 				nx = x + delta[0]

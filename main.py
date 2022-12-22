@@ -143,7 +143,8 @@ class World:
 		return self.ownership.getBorderTo(pno, condition=self.conquerableFor(pno), count=count)#, morethan=pno)
 
 	def getAdjacentEnemy(self, pno, enemy, count):
-		return self.ownership.getBorderTo(pno, condition=self.isPlayer(enemy), count=count)#, mustcontain=enemy)
+		#return self.ownership.getBorderTo(pno, condition=self.isPlayer(enemy), count=count)#, mustcontain=enemy)
+		return self.ownership.getBorderTo2(pno, enemy, count=count)
 
 	def getFreeAdjacent(self, pno, count):
 		return self.ownership.getBorderTo(pno, condition=self.empty_occupyable, count=count)#, mustcontain=PIXEL_EMPTY)
